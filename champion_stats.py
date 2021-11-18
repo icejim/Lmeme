@@ -5,8 +5,6 @@ GAME_DATA_ENDPOINT = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
 CHAMPION_INFO_ENDPOINT = 'https://raw.communitydragon.org/latest/game/data/characters/{champion}/{champion}.bin.json'
 DEFAULT_RADIUS = 65.
 DEFAULT_WINDUP = 0.3
-MINION_NAMES = ["sru_chaosminionmelee", "sru_chaosminionranged", "sru_chaosminionsiege", "sru_chaosminionsuper", "sru_orderminionmelee", "sru_orderminionranged", "sru_orderminionsiege", "sru_orderminionsuper"]
-
 
 def clean_champion_name(name):
     return name.split('game_character_displayname_')[1].lower()
@@ -18,10 +16,6 @@ class ChampionStats():
         champion_names = [clean_champion_name(player['rawChampionName']) for player in game_data['allPlayers']]
         self.champion_data = {}
         for champion in champion_names:
-            champion_response = requests.get(CHAMPION_INFO_ENDPOINT.format(champion=champion)).json()
-            # lower case everything for consistency
-            self.champion_data[champion] = {k.lower(): v for k, v in champion_response.items()}
-        for champion in MINION_NAMES:
             champion_response = requests.get(CHAMPION_INFO_ENDPOINT.format(champion=champion)).json()
             # lower case everything for consistency
             self.champion_data[champion] = {k.lower(): v for k, v in champion_response.items()}

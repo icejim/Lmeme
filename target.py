@@ -37,6 +37,11 @@ def in_basic_attack_range(stats, champion, target):
     champion_radius = stats.get_radius(champion.name) * champion.size_multiplier
     return distance_between(champion, target) - entity_radius <= champion.attack_range + champion_radius
 
+def in_basic_attack_range(stats1, champion, stats12, target):
+    # hitbox edge to edge
+    entity_radius = stats12.get_radius(target.name) * target.size_multiplier
+    champion_radius = stats1.get_radius(champion.name) * champion.size_multiplier
+    return distance_between(champion, target) - entity_radius <= champion.attack_range + champion_radius
 
 def in_spell_range(champion, target, spell_radius):
     # center to center
@@ -60,13 +65,13 @@ def select_lowest_target(stats, champion, entities):
             min_autos = autos
     return target
 
-def select_lasthit_target(stats, champion, entities):
+def select_lasthit_target(stats1, champion, stats2, entities):
     target = None
     min_autos = None
     for entity in entities:
         if not hurtable(champion, entity):
             continue
-        if not in_basic_attack_range(stats, champion, entity):
+        if not in_basic_attack_range(stats1, champion, stats2, entity):
             continue
         autos = basic_attacks_needed(champion, entity)
         if autos > 1.1:
