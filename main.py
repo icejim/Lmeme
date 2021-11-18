@@ -3,6 +3,7 @@ import keyboard
 from pymem import Pymem
 from world import find_champion_pointers, find_minion_pointers, find_game_time, find_local_net_id, find_view_proj_matrix, read_object, world_to_screen
 from champion_stats import ChampionStats
+from minion_stats import MinionStats
 from target import select_lowest_target, select_lasthit_target
 from constants import PROCESS_NAME
 from orbwalker import OrbWalker
@@ -11,6 +12,7 @@ from orbwalker import OrbWalker
 def main():
     mem = Pymem(PROCESS_NAME)
     champion_stats = ChampionStats()
+    minion_stats = MinionStats()
     orb_walker = OrbWalker(mem)
     champion_pointers = find_champion_pointers(mem, champion_stats.names())
     minion_pointers = find_minion_pointers(mem)
@@ -32,7 +34,7 @@ def main():
         target = None
         orb_walk = keyboard.is_pressed(' ')
         if orb_walk:
-            target = select_lasthit_target(champion_stats, active_champion, minions)
+            target = select_lasthit_target(champion_stats, active_champion, minion_stats, minions)
 
         x, y = None, None
         if target is not None:
