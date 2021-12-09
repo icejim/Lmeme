@@ -1,6 +1,5 @@
 import time
 import keyboard
-import twitch
 from pymem import Pymem
 from world import find_champion_pointers, find_game_time, find_local_net_id, find_view_proj_matrix, read_object, world_to_screen
 from champion_stats import ChampionStats
@@ -25,15 +24,22 @@ def main():
         target = None
         orb_walk = keyboard.is_pressed(' ')
         if orb_walk:
-            target = select_lowest_target(champion_stats, active_champion, champions)
-
+            if "Cassiopeia" in active_champion.name:
+                target = select_lowest_target(champion_stats, active_champion, champions, 700.0)
+            else:
+                target = select_lowest_target(champion_stats, active_champion, champions)
+        
         x, y = None, None
         if target is not None:
             x, y = world_to_screen(view_proj_matrix, width, height, target.x, target.z, target.y)
 
         if orb_walk:
-            orb_walker.walk(champion_stats, active_champion, x, y, game_time)
-        time.sleep(0.005)
+            if "Cassiopeia" in active_champion.name:
+                orb_walker.cast(x, y, None)
+            else:
+                orb_walker.walk(champion_stats, active_champion, x, y, game_time)
+                
+        time.sleep(0.05)
 
 
 if __name__ == '__main__':

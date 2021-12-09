@@ -31,11 +31,14 @@ def distance_between(champion, target):
     return math.sqrt((champion.x - target.x)**2 + (champion.y - target.y)**2)
 
 
-def in_basic_attack_range(stats, champion, target):
+def in_basic_attack_range(stats, champion, target, custome_range):
     # hitbox edge to edge
+    champion_range = champion.attack_range
+    if custome_range:
+        champion_range = custome_range
     entity_radius = stats.get_radius(target.name) * target.size_multiplier
     champion_radius = stats.get_radius(champion.name) * champion.size_multiplier
-    return distance_between(champion, target) - entity_radius <= champion.attack_range + champion_radius
+    return distance_between(champion, target) - entity_radius <= champion_range + champion_radius
 
 
 def in_spell_range(champion, target, spell_radius):
@@ -43,7 +46,7 @@ def in_spell_range(champion, target, spell_radius):
     return distance_between(champion, target) <= spell_radius
 
 
-def select_lowest_target(stats, champion, entities):
+def select_lowest_target(stats, champion, entities, custome_range = None):
     # todo: check if champion is stunned
     target = None
     min_autos = None
@@ -52,7 +55,7 @@ def select_lowest_target(stats, champion, entities):
             continue
         if is_clone(entity):
             continue
-        if not in_basic_attack_range(stats, champion, entity):
+        if not in_basic_attack_range(stats, champion, entity, custome_range):
             continue
         autos = basic_attacks_needed(champion, entity)
         if target is None or 0 < autos < min_autos:

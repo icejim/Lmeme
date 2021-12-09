@@ -7,6 +7,7 @@ LETHAL_TEMPO = 'ASSETS/Perks/Styles/Precision/LethalTempo/LethalTempo.lua'
 HAIL_OF_BLADES = 'ASSETS/Perks/Styles/Domination/HailOfBlades/HailOfBladesBuff.lua'
 LETHAL_TEMPO_STACKS_UNCAPPED_RANGED = 30.
 LETHAL_TEMPO_STACKS_UNCAPPED_MELEE = 90.
+MOVE_CLICK_DELAY = 0.05
 
 class OrbWalker:
     def __init__(self, mem):
@@ -17,12 +18,16 @@ class OrbWalker:
 
     @staticmethod
     def get_attack_time(champion, attack_speed_base, attack_speed_ratio, attack_speed_cap):
-        attack_speed = min(attack_speed_cap, (champion.attack_speed_multiplier - 1) * attack_speed_ratio + attack_speed_base)
-        return 1. / attack_speed
+        total_attack_speed = min(attack_speed_cap, (champion.attack_speed_multiplier - 1) * attack_speed_ratio + attack_speed_base)
+        return 1. / total_attack_speed
 
     @staticmethod
-    def get_windup_time(champion, attack_speed_base, attack_speed_ratio, windup, attack_speed_cap):
-        return OrbWalker.get_attack_time(champion, attack_speed_base, attack_speed_ratio, attack_speed_cap) * windup
+    def get_windup_time(champion, attack_speed_base, attack_speed_ratio, windup_percent, windup_modifier, attack_speed_cap):
+        # More information at https://leagueoflegends.fandom.com/wiki/Basic_attack#Attack_speed
+        attack_time = OrbWalker.get_attack_time(champion, attack_speed_base, attack_speed_ratio, attack_speed_cap)
+        base_windup_time = (1 / attack_speed_base) * windup_percent
+        windup_time = base_windup_time + ((attack_time * windup_percent) - base_windup_time) * (1+windup_modifier)
+        return min(windup_time, attack_time)
 
     @staticmethod
     def get_attack_speed_cap(stats, champion, game_time):
@@ -41,7 +46,7 @@ class OrbWalker:
         return 2.5
 
     def walk(self, stats, champion, x, y, game_time):
-        mouse.press(mouse.MIDDLE)
+        keyboard.press('`')
         attack_speed_cap = OrbWalker.get_attack_speed_cap(stats, champion, game_time)
         if x is not None and y is not None and self.can_attack_time < game_time:
             stored_x, stored_y = mouse.get_position()
@@ -50,25 +55,25 @@ class OrbWalker:
             time.sleep(0.01)
             game_time = find_game_time(self.mem)
             attack_speed_base, attack_speed_ratio = stats.get_attack_speed(champion.name)
-            windup = stats.get_windup(champion.name)
+            windup_percent, windup_modifier = stats.get_windup(champion.name)
             self.can_attack_time = game_time + OrbWalker.get_attack_time(champion, attack_speed_base, attack_speed_ratio, attack_speed_cap)
-            self.can_move_time = game_time + OrbWalker.get_windup_time(champion, attack_speed_base, attack_speed_ratio, windup, attack_speed_cap)
+            self.can_move_time = game_time + OrbWalker.get_windup_time(champion, attack_speed_base, attack_speed_ratio, windup_percent, windup_modifier, attack_speed_cap)
             mouse.move(stored_x, stored_y)
         elif self.can_move_time < game_time:
             mouse.right_click()
-            MOVE_CLICK_DELAY = 0.05
             self.can_move_time = game_time + MOVE_CLICK_DELAY
-        mouse.release(mouse.MIDDLE)
+        keyboard.release('`')
 
     def cast(self, x, y, spell):
-        mouse.press(mouse.MIDDLE)
-        if x is not None and y is not None:
+        game_time = find_game_time(self.mem)
+        if x is not None and y is not None and self.can_attack_time < game_time:
             stored_x, stored_y = mouse.get_position()
             mouse.move(int(x), int(y))
-            keyboard.press_and_release('w')
+            keyboard.press_and_release('e')
             time.sleep(0.01)
-            game_time = find_game_time(self.mem)
-            self.can_attack_time = game_time + 0.25
+            self.can_attack_time = game_time + 0.5
             self.can_move_time = game_time + 0.25
             mouse.move(stored_x, stored_y)
-        mouse.release(mouse.MIDDLE)
+        elif self.can_move_time < game_time:
+            mouse.right_click()
+            self.can_move_time = game_time + MOVE_CLICK_DELAY
